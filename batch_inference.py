@@ -57,7 +57,7 @@ def select_device() -> str:
 
 def main():
     model_path = ensure_model_weights("ckpts/Z-Image-Turbo")
-    dtype = torch.float16
+    dtype = torch.float32
     compile = False
     height = 1024
     width = 1024

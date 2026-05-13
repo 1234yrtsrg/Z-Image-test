@@ -32,8 +32,8 @@ def parse_args():
     parser.add_argument(
         "--dtype",
         choices=("bf16", "fp16", "fp32"),
-        default="fp16",
-        help="Model compute dtype. fp16 is the default for Tesla V100.",
+        default="fp32",
+        help="Model compute dtype. fp32 is the stable default for Tesla V100.",
     )
     parser.add_argument(
         "--attention",
@@ -112,7 +112,7 @@ def main():
     print(f"Time taken: {end_time - start_time:.2f} seconds")
     print(f"Saved image to: {output_path}")
 
-    # V100 default: fp16 + _native_math. For Hopper GPUs (H100/H200/H800), try _flash_3 + --compile.
+    # V100 default: fp32 + _native_math. For Hopper GPUs (H100/H200/H800), try bf16 + _flash_3 + --compile.
 
 
 if __name__ == "__main__":
