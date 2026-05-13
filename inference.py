@@ -37,8 +37,8 @@ def parse_args():
     )
     parser.add_argument(
         "--attention",
-        default=os.environ.get("ZIMAGE_ATTENTION", "_native_math"),
-        help="Attention backend. _native_math is the default for Tesla V100.",
+        default=os.environ.get("ZIMAGE_ATTENTION", "native"),
+        help="Attention backend. native is the default for Tesla V100.",
     )
     parser.add_argument("--compile", action="store_true", help="Compile DiT and VAE for faster repeated runs.")
     parser.add_argument("--verify", action="store_true", help="Verify model files with checksums when available.")
@@ -82,6 +82,7 @@ def main():
     }
     dtype = dtype_map[args.dtype]
     device = select_device(torch)
+    print(f"Chosen dtype: {dtype}")
     if device == "cpu":
         print("Warning: running Z-Image on CPU will be extremely slow. Use a CUDA GPU if available.")
     elif args.dtype == "bf16" and not torch.cuda.is_bf16_supported():
@@ -112,7 +113,7 @@ def main():
     print(f"Time taken: {end_time - start_time:.2f} seconds")
     print(f"Saved image to: {output_path}")
 
-    # V100 default: fp32 + _native_math. For Hopper GPUs (H100/H200/H800), try bf16 + _flash_3 + --compile.
+    # V100 default: fp32 + native. For Hopper GPUs (H100/H200/H800), try bf16 + _flash_3 + --compile.
 
 
 if __name__ == "__main__":

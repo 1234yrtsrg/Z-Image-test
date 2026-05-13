@@ -63,7 +63,7 @@ def main():
     width = 1024
     num_inference_steps = 8
     guidance_scale = 0.0
-    attn_backend = os.environ.get("ZIMAGE_ATTENTION", "_native_math")
+    attn_backend = os.environ.get("ZIMAGE_ATTENTION", "native")
     output_dir = Path("outputs")
     output_dir.mkdir(exist_ok=True)
 

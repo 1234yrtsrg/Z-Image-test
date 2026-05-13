@@ -278,14 +278,38 @@ def generate(
     if output_type == "latent":
         return latents
 
+    logger.info(
+        "Latents before VAE: "
+        f"dtype={latents.dtype}, "
+        f"finite={torch.isfinite(latents).all().item()}, "
+        f"min={latents.min().item():.4f}, "
+        f"max={latents.max().item():.4f}, "
+        f"mean={latents.mean().item():.4f}"
+    )
+
     shift_factor = getattr(vae.config, "shift_factor", 0.0) or 0.0
     latents = (latents.to(vae.dtype) / vae.config.scaling_factor) + shift_factor
     image = vae.decode(latents, return_dict=False)[0]
+    logger.info(
+        "Raw image after VAE: "
+        f"dtype={image.dtype}, "
+        f"finite={torch.isfinite(image).all().item()}, "
+        f"min={image.min().item():.4f}, "
+        f"max={image.max().item():.4f}, "
+        f"mean={image.mean().item():.4f}"
+    )
 
     if output_type == "pil":
         from PIL import Image
 
         image = (image / 2 + 0.5).clamp(0, 1)
+        logger.info(
+            "Image after clamp: "
+            f"finite={torch.isfinite(image).all().item()}, "
+            f"min={image.min().item():.4f}, "
+            f"max={image.max().item():.4f}, "
+            f"mean={image.mean().item():.4f}"
+        )
         image = image.cpu().permute(0, 2, 3, 1).float().numpy()
         image = (image * 255).round().astype("uint8")
         image = [Image.fromarray(img) for img in image]
