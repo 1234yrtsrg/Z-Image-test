@@ -57,13 +57,13 @@ def select_device() -> str:
 
 def main():
     model_path = ensure_model_weights("ckpts/Z-Image-Turbo")
-    dtype = torch.bfloat16
+    dtype = torch.float16
     compile = False
-    height = 1024
-    width = 1024
-    num_inference_steps = 8
+    height = 512
+    width = 512
+    num_inference_steps = 4
     guidance_scale = 0.0
-    attn_backend = os.environ.get("ZIMAGE_ATTENTION", "_native_flash")
+    attn_backend = os.environ.get("ZIMAGE_ATTENTION", "_native_math")
     output_dir = Path("outputs")
     output_dir.mkdir(exist_ok=True)
 
