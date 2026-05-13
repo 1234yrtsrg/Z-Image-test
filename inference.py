@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument("--output", default="example.png", help="Output image path.")
     parser.add_argument("--model-path", default="ckpts/Z-Image-Turbo", help="Local model directory.")
     parser.add_argument("--repo-id", default="Tongyi-MAI/Z-Image-Turbo", help="Hugging Face repo to download if needed.")
+    parser.add_argument("--gpu", default=None, help="Physical GPU id to use, for example 7.")
     parser.add_argument("--height", type=int, default=1024, help="Image height. Must be divisible by 16.")
     parser.add_argument("--width", type=int, default=1024, help="Image width. Must be divisible by 16.")
     parser.add_argument("--steps", type=int, default=8, help="Number of inference steps.")
@@ -69,6 +70,10 @@ def select_device(torch):
 def main():
     args = parse_args()
 
+    if args.gpu is not None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+        print(f"Using physical GPU id: {args.gpu}")
+
     import torch
 
     from utils import AttentionBackend, ensure_model_weights, load_from_local_dir, set_attention_backend
@@ -82,6 +87,8 @@ def main():
     }
     dtype = dtype_map[args.dtype]
     device = select_device(torch)
+    if device == "cuda":
+        print(f"Visible CUDA device: {torch.cuda.get_device_name(0)}")
     print(f"Chosen dtype: {dtype}")
     if device == "cpu":
         print("Warning: running Z-Image on CPU will be extremely slow. Use a CUDA GPU if available.")

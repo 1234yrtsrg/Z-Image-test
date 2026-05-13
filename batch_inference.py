@@ -4,6 +4,11 @@ import os
 from pathlib import Path
 import time
 
+gpu_id = os.environ.get("ZIMAGE_GPU")
+if gpu_id:
+    os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
+    print(f"Using physical GPU id: {gpu_id}")
+
 import torch
 
 from utils import ensure_model_weights
@@ -68,6 +73,8 @@ def main():
     output_dir.mkdir(exist_ok=True)
 
     device = select_device()
+    if device == "cuda":
+        print(f"Visible CUDA device: {torch.cuda.get_device_name(0)}")
 
     components = load_from_local_dir(model_path, device=device, dtype=dtype, compile=compile)
     AttentionBackend.print_available_backends()
