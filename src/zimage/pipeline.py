@@ -84,6 +84,8 @@ def generate(
     output_type: str = "pil",
 ):
     device = next(transformer.parameters()).device
+    transformer_dtype = next(transformer.parameters()).dtype
+    text_encoder_device = next(text_encoder.parameters()).device
 
     if hasattr(vae, "config") and hasattr(vae.config, "block_out_channels"):
         vae_scale_factor = 2 ** (len(vae.config.block_out_channels) - 1)
@@ -124,8 +126,8 @@ def generate(
         return_tensors="pt",
     )
 
-    text_input_ids = text_inputs.input_ids.to(device)
-    prompt_masks = text_inputs.attention_mask.to(device).bool()
+    text_input_ids = text_inputs.input_ids.to(text_encoder_device)
+    prompt_masks = text_inputs.attention_mask.to(text_encoder_device).bool()
 
     prompt_embeds = text_encoder(
         input_ids=text_input_ids,
@@ -135,7 +137,7 @@ def generate(
 
     prompt_embeds_list = []
     for i in range(len(prompt_embeds)):
-        prompt_embeds_list.append(prompt_embeds[i][prompt_masks[i]])
+        prompt_embeds_list.append(prompt_embeds[i][prompt_masks[i]].to(device=device, dtype=transformer_dtype))
 
     negative_prompt_embeds_list = []
     if do_classifier_free_guidance:
@@ -163,8 +165,8 @@ def generate(
             return_tensors="pt",
         )
 
-        neg_input_ids = neg_inputs.input_ids.to(device)
-        neg_masks = neg_inputs.attention_mask.to(device).bool()
+        neg_input_ids = neg_inputs.input_ids.to(text_encoder_device)
+        neg_masks = neg_inputs.attention_mask.to(text_encoder_device).bool()
 
         neg_embeds = text_encoder(
             input_ids=neg_input_ids,
@@ -173,7 +175,7 @@ def generate(
         ).hidden_states[-2]
 
         for i in range(len(neg_embeds)):
-            negative_prompt_embeds_list.append(neg_embeds[i][neg_masks[i]])
+            negative_prompt_embeds_list.append(neg_embeds[i][neg_masks[i]].to(device=device, dtype=transformer_dtype))
 
     if num_images_per_prompt > 1:
         prompt_embeds_list = [pe for pe in prompt_embeds_list for _ in range(num_images_per_prompt)]
@@ -288,7 +290,8 @@ def generate(
     )
 
     shift_factor = getattr(vae.config, "shift_factor", 0.0) or 0.0
-    latents = (latents.to(vae.dtype) / vae.config.scaling_factor) + shift_factor
+    vae_device = next(vae.parameters()).device
+    latents = (latents.to(device=vae_device, dtype=vae.dtype) / vae.config.scaling_factor) + shift_factor
     image = vae.decode(latents, return_dict=False)[0]
     logger.info(
         "Raw image after VAE: "

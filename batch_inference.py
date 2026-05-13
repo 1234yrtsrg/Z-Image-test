@@ -62,7 +62,7 @@ def select_device() -> str:
 
 def main():
     model_path = ensure_model_weights("ckpts/Z-Image-Turbo")
-    dtype = torch.float16
+    dtype = torch.float32
     compile = False
     height = 1024
     width = 1024
@@ -76,7 +76,14 @@ def main():
     if device == "cuda":
         print(f"Visible CUDA device: {torch.cuda.get_device_name(0)}")
 
-    components = load_from_local_dir(model_path, device=device, dtype=dtype, compile=compile)
+    components = load_from_local_dir(
+        model_path,
+        device=device,
+        dtype=dtype,
+        vae_device="cpu",
+        text_encoder_device="cpu",
+        compile=compile,
+    )
     AttentionBackend.print_available_backends()
     set_attention_backend(attn_backend)
     print(f"Chosen attention backend: {attn_backend}")

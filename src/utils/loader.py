@@ -81,6 +81,8 @@ def load_from_local_dir(
     model_dir: Union[str, Path],
     device: str = "cuda",
     dtype: torch.dtype = torch.bfloat16,
+    vae_device: Optional[str] = None,
+    text_encoder_device: Optional[str] = None,
     verbose: bool = False,
     compile: bool = False,
 ) -> dict:
@@ -92,12 +94,16 @@ def load_from_local_dir(
         device: Device to load models on
         dtype: Data type for model weights
         verbose: Whether to display loading logs
+        vae_device: Device to load the VAE on. Defaults to device.
+        text_encoder_device: Device to load the text encoder on. Defaults to device.
         compile: Whether to compile transformer and vae with torch.compile
 
     Returns:
         Dictionary containing transformer, vae, text_encoder, tokenizer, and scheduler
     """
     model_dir = Path(model_dir)
+    vae_device = vae_device or device
+    text_encoder_device = text_encoder_device or device
 
     sys.path.insert(0, str(model_dir.parent.parent / "Z-Image" / "src"))
     from zimage.transformer import ZImageTransformer2DModel
@@ -168,9 +174,10 @@ def load_from_local_dir(
     vae_state_dict = load_sharded_safetensors(vae_dir, device="cpu")
     vae.load_state_dict(vae_state_dict, strict=False)
     del vae_state_dict
-    vae.to(device=device, dtype=torch.float32)
+    vae.to(device=vae_device, dtype=torch.float32)
     vae.eval()
-    torch.cuda.empty_cache()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
     # Text Encoder
     if verbose:
@@ -182,7 +189,7 @@ def load_from_local_dir(
         dtype=dtype,
         trust_remote_code=True,
     )
-    text_encoder.to(device)
+    text_encoder.to(text_encoder_device)
     text_encoder.eval()
 
     # Tokenizer

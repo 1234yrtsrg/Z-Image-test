@@ -33,8 +33,14 @@ def parse_args():
     parser.add_argument(
         "--dtype",
         choices=("bf16", "fp16", "fp32"),
-        default="fp16",
-        help="Model compute dtype. fp16 is the default that fits Tesla V100 32GB.",
+        default="fp32",
+        help="Transformer compute dtype. fp32 avoids fp16 NaNs on Tesla V100.",
+    )
+    parser.add_argument("--vae-device", default="cpu", help="Device for VAE decode. Default keeps V100 memory free.")
+    parser.add_argument(
+        "--text-encoder-device",
+        default="cpu",
+        help="Device for prompt text encoder. Default keeps V100 memory free.",
     )
     parser.add_argument(
         "--attention",
@@ -95,7 +101,14 @@ def main():
     elif args.dtype == "bf16" and not torch.cuda.is_bf16_supported():
         print("Warning: this GPU may not support bfloat16 well. Try --dtype fp16 if generation fails.")
 
-    components = load_from_local_dir(model_path, device=device, dtype=dtype, compile=args.compile)
+    components = load_from_local_dir(
+        model_path,
+        device=device,
+        dtype=dtype,
+        vae_device=args.vae_device,
+        text_encoder_device=args.text_encoder_device,
+        compile=args.compile,
+    )
     AttentionBackend.print_available_backends()
     set_attention_backend(args.attention)
     print(f"Chosen attention backend: {args.attention}")
@@ -120,7 +133,7 @@ def main():
     print(f"Time taken: {end_time - start_time:.2f} seconds")
     print(f"Saved image to: {output_path}")
 
-    # V100 default: fp16 + native. For Hopper GPUs (H100/H200/H800), try bf16 + _flash_3 + --compile.
+    # V100 default: fp32 transformer on GPU, VAE/text encoder on CPU. For Hopper GPUs, try bf16 + _flash_3.
 
 
 if __name__ == "__main__":
