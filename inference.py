@@ -24,9 +24,9 @@ def parse_args():
     parser.add_argument("--output", default="example.png", help="Output image path.")
     parser.add_argument("--model-path", default="ckpts/Z-Image-Turbo", help="Local model directory.")
     parser.add_argument("--repo-id", default="Tongyi-MAI/Z-Image-Turbo", help="Hugging Face repo to download if needed.")
-    parser.add_argument("--height", type=int, default=512, help="Image height. Must be divisible by 16.")
-    parser.add_argument("--width", type=int, default=512, help="Image width. Must be divisible by 16.")
-    parser.add_argument("--steps", type=int, default=4, help="Number of inference steps.")
+    parser.add_argument("--height", type=int, default=1024, help="Image height. Must be divisible by 16.")
+    parser.add_argument("--width", type=int, default=1024, help="Image width. Must be divisible by 16.")
+    parser.add_argument("--steps", type=int, default=8, help="Number of inference steps.")
     parser.add_argument("--guidance-scale", type=float, default=0.0, help="Use 0.0 for Z-Image-Turbo.")
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     parser.add_argument(
